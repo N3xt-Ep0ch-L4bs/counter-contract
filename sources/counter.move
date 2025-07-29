@@ -2,6 +2,9 @@ module counter::counter;
 
 use sui::event;
 
+const E_UNAUTHORIZED: u64 = 0;
+
+
 public struct GlobalCounter has key {
     id: UID,
     value: u64,
@@ -108,7 +111,7 @@ public fun decrement_personal_counter(personal_counter: &mut PersonalCounter, ct
 }
 
 public fun reset_personal_counter(personal_counter: &mut PersonalCounter, ctx: &mut TxContext) {
-    assert!(personal_counter.owner == ctx.sender());
+    assert!(personal_counter.owner == ctx.sender(), E_UNAUTHORIZED);
     personal_counter.value = 0;
 
     event::emit(PersonalCounterReset {
@@ -119,7 +122,7 @@ public fun reset_personal_counter(personal_counter: &mut PersonalCounter, ctx: &
 
 #[allow(unused_variable)]
 public fun delete_personal_counter(personal_counter: PersonalCounter, ctx: &mut TxContext) {
-    assert!(personal_counter.owner == ctx.sender());
+    assert!(personal_counter.owner == ctx.sender(), E_UNAUTHORIZED);
     let PersonalCounter { id, value , owner} = personal_counter;
 
     id.delete();
