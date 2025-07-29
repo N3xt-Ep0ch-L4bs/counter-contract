@@ -10,6 +10,7 @@ public struct GlobalCounter has key {
 public struct PersonalCounter has key, store {
     id: UID,
     value: u64,
+    owner: address
 }
 
 public struct GlobalCounterCreated has copy, drop {
@@ -77,6 +78,7 @@ public fun create_personal_counter(ctx: &mut TxContext) {
     let personal_counter = PersonalCounter {
         id: object::new(ctx),
         value: 0,
+        owner: ctx.sender()
     };
     event::emit(PersonalCounterCreated {
         personal_counter_id: object::id(&personal_counter),
@@ -106,6 +108,7 @@ public fun decrement_personal_counter(personal_counter: &mut PersonalCounter, ct
 }
 
 public fun reset_personal_counter(personal_counter: &mut PersonalCounter, ctx: &mut TxContext) {
+    assert!(personal_counter.owner == ctx.sender());
     personal_counter.value = 0;
 
     event::emit(PersonalCounterReset {
@@ -116,7 +119,8 @@ public fun reset_personal_counter(personal_counter: &mut PersonalCounter, ctx: &
 
 #[allow(unused_variable)]
 public fun delete_personal_counter(personal_counter: PersonalCounter, ctx: &mut TxContext) {
-    let PersonalCounter { id, value } = personal_counter;
+    assert!(personal_counter.owner == ctx.sender());
+    let PersonalCounter { id, value , owner} = personal_counter;
 
     id.delete();
 }
