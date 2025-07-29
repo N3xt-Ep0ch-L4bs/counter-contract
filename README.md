@@ -1,4 +1,4 @@
-# counter::counter Module
+# Counter::counter Module
 
 A simple Move smart contract module on the Sui blockchain that provides global and personal counter functionalities. It supports creation, manipulation, and deletion of counters, along with event emission for off-chain tracking.
 
