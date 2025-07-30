@@ -60,6 +60,13 @@ fun init(ctx: &mut TxContext) {
     transfer::share_object(global_counter)
 }
 
+#[test_only]
+/// Wrapper for module init to enable testing
+public fun test_init(ctx: &mut TxContext) {
+    init(ctx);
+}
+
+
 public fun increment_global_counter(global_counter: &mut GlobalCounter, ctx: &mut TxContext) {
     global_counter.value = global_counter.value + 1;
     event::emit(GlobalCounterIncremented {
