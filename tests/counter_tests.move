@@ -95,13 +95,15 @@ fun test_increment_personal_counter() {
     let mut scenario = ts::begin(CREATOR); {
         create_personal_counter(scenario.ctx());
     };
+
     ts::next_tx(&mut scenario, CREATOR);
 
     {
-        let mut pc: PersonalCounter = ts::take_shared<PersonalCounter>(&scenario);
+        let mut pc: PersonalCounter = ts::take_from_sender<PersonalCounter>(&scenario);
         increment_personal_counter(&mut pc, scenario.ctx());
-        ts::return_shared<PersonalCounter>(pc);
+        ts::return_to_address<PersonalCounter>(CREATOR, pc);
     };
+
     let effects = ts::next_tx(&mut scenario, CREATOR);
     assert_eq(effects.num_user_events(), 1);
     scenario.end();
@@ -111,22 +113,21 @@ fun test_increment_personal_counter() {
 #[test]
 fun test_decrement_personal_counter() {
     let mut scenario = ts::begin(CREATOR); {
-        counter::test_init(scenario.ctx());
         create_personal_counter(scenario.ctx());
     };
     ts::next_tx(&mut scenario, CREATOR);
 
     {
-        let mut pc: PersonalCounter = ts::take_shared(&scenario);
+        let mut pc: PersonalCounter = ts::take_from_sender<PersonalCounter>(&scenario);
         increment_personal_counter(&mut pc, scenario.ctx());
-        ts::return_shared(pc);
+        ts::return_to_address<PersonalCounter>(CREATOR, pc);
     };
     ts::next_tx(&mut scenario, CREATOR);
 
     {
-        let mut pc: PersonalCounter = ts::take_shared(&scenario);
+        let mut pc: PersonalCounter = ts::take_from_sender<PersonalCounter>(&scenario);
         decrement_personal_counter(&mut pc, scenario.ctx());
-        ts::return_shared(pc);
+        ts::return_to_address<PersonalCounter>(CREATOR, pc);
     };
     
     let effects = ts::next_tx(&mut scenario, CREATOR);
@@ -138,22 +139,21 @@ fun test_decrement_personal_counter() {
 #[test]
 fun test_reset_personal_counter() {
     let mut scenario = ts::begin(CREATOR); {
-        counter::test_init(scenario.ctx());
         create_personal_counter(scenario.ctx());
     };
     ts::next_tx(&mut scenario, CREATOR);
 
     {
-        let mut pc: PersonalCounter = ts::take_shared(&scenario);
+        let mut pc: PersonalCounter = ts::take_from_sender<PersonalCounter>(&scenario);
         increment_personal_counter(&mut pc, scenario.ctx());
-        ts::return_shared(pc);
+        ts::return_to_address<PersonalCounter>(CREATOR, pc);
     };
     ts::next_tx(&mut scenario, CREATOR);
 
     {
-        let mut pc: PersonalCounter = ts::take_shared(&scenario);
+        let mut pc: PersonalCounter = ts::take_from_sender<PersonalCounter>(&scenario);
         reset_personal_counter(&mut pc, scenario.ctx());
-        ts::return_shared(pc);
+        ts::return_to_address<PersonalCounter>(CREATOR, pc);
     };
 
     let effects = ts::next_tx(&mut scenario, CREATOR);
@@ -165,22 +165,17 @@ fun test_reset_personal_counter() {
 #[test, expected_failure(abort_code = E_UNAUTHORIZED)]
 fun test_reset_personal_counter_fail_not_owner() {
     let mut scenario = ts::begin(CREATOR); {
-        counter::test_init(scenario.ctx());
         create_personal_counter(scenario.ctx());
     };
-    ts::next_tx(&mut scenario, CREATOR);
 
-    {
-        let pc: PersonalCounter = ts::take_shared(&scenario);
-        ts::return_shared(pc);
-    };
     ts::next_tx(&mut scenario, CALLER);
 
     {
-        let mut pc: PersonalCounter = ts::take_shared(&scenario);
+        let mut pc: PersonalCounter = ts::take_from_address<PersonalCounter>(&scenario, CREATOR);
         reset_personal_counter(&mut pc, scenario.ctx());
-        ts::return_shared(pc);
+        ts::return_to_address<PersonalCounter>(CREATOR, pc);
     };
+
     scenario.end();
 }
 
@@ -188,18 +183,17 @@ fun test_reset_personal_counter_fail_not_owner() {
 #[test]
 fun test_delete_personal_counter() {
     let mut scenario = ts::begin(CREATOR); {
-        counter::test_init(scenario.ctx());
         create_personal_counter(scenario.ctx());
     };
     ts::next_tx(&mut scenario, CREATOR);
 
     {
-        let pc: PersonalCounter = ts::take_shared(&scenario);
+        let pc: PersonalCounter = ts::take_from_sender<PersonalCounter>(&scenario);
         delete_personal_counter(pc, scenario.ctx());
     };
 
     let effects = ts::next_tx(&mut scenario, CREATOR);
-    assert_eq(effects.num_user_events(), 0); // no event emitted
+    assert_eq(effects.num_user_events(), 0); 
     scenario.end();
 }
 
@@ -207,19 +201,13 @@ fun test_delete_personal_counter() {
 #[test, expected_failure(abort_code = E_UNAUTHORIZED)]
 fun test_delete_personal_counter_fail_not_owner() {
     let mut scenario = ts::begin(CREATOR); {
-        counter::test_init(scenario.ctx());
         create_personal_counter(scenario.ctx());
     };
-    ts::next_tx(&mut scenario, CREATOR);
 
-    {
-        let pc: PersonalCounter = ts::take_shared(&scenario);
-        ts::return_shared(pc);
-    };
     ts::next_tx(&mut scenario, CALLER);
 
     {
-        let pc: PersonalCounter = ts::take_shared(&scenario);
+        let pc: PersonalCounter = ts::take_from_address<PersonalCounter>(&scenario, CREATOR);
         delete_personal_counter(pc, scenario.ctx());
     };
     scenario.end();
